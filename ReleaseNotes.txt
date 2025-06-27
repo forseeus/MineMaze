@@ -1,0 +1,8 @@
+VERSION 1.0:
+Initial release
+
+VERSION 1.01
+When opening a file, the file name now appears in the title bar.
+Added Edit->Select All (CTRL-A)
+Added Edit->Select Invert (CTRL-I)
+Fixed bug in X,Y,Z text boxes where you couldn't enter numbers outside range 1~128.

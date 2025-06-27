@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.function.UnaryOperator;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
@@ -96,6 +95,7 @@ public class MineMazeApp extends Application{
     final int minRows = 1;
     final int maxCols = 128;
     final int minCols = 1;
+    final String versionTitle = "MineMaze V1.01";
     
 	
 	public static void main(String[] args) {
@@ -119,6 +119,8 @@ public class MineMazeApp extends Application{
     KeyCodeCombination keyComboZoomIn = new KeyCodeCombination(KeyCode.EQUALS, KeyCombination.CONTROL_DOWN);
     KeyCodeCombination keyComboZoomOut = new KeyCodeCombination(KeyCode.MINUS, KeyCombination.CONTROL_DOWN);
     KeyCodeCombination keyComboShowHelp = new KeyCodeCombination(KeyCode.F1);
+    KeyCodeCombination keyComboSelectAll = new KeyCodeCombination(KeyCode.A, KeyCombination.CONTROL_DOWN);
+    KeyCodeCombination keyComboSelectInvert = new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN);
     
 	MenuItem fileNewMaze = new MenuItem("New Maze");
 	MenuItem fileOpenMaze = new MenuItem("Open Maze");
@@ -133,7 +135,9 @@ public class MineMazeApp extends Application{
 	MenuItem editCopy = new MenuItem("Copy");
 	MenuItem editPaste = new MenuItem("Paste");
 	MenuItem editClear = new MenuItem("Delete");
-	Menu EditMenu = new Menu("Edit",null,editUndo,editRedo, editCut, editCopy, editPaste, editClear);
+	MenuItem editSelectAll = new MenuItem("Select All");
+	MenuItem editSelectInvert = new MenuItem("Select Invert");
+	Menu EditMenu = new Menu("Edit",null,editUndo,editRedo, editCut, editCopy, editPaste, editClear,editSelectAll,editSelectInvert);
 	MenuItem viewZoomIn = new MenuItem("Zoom In");
 	MenuItem viewZoomOut = new MenuItem("Zoom Out");
 	Menu ViewMenu = new Menu("View", null, viewZoomIn, viewZoomOut);
@@ -185,18 +189,22 @@ public class MineMazeApp extends Application{
 	TextArea outText = new TextArea();
 	
 	Scene scene;
+	Stage primaryStage;
 	
     @Override
     public void start(Stage primaryStage) {
+    	this.primaryStage = primaryStage;
     	isUndoEnabled = false;//Disable undo saving while building UI.
-    	primaryStage.setTitle("MineMaze V1.0");
+    	primaryStage.setTitle(versionTitle);
     	
     	editUndo.setOnAction(e->handleEditUndo(e));
     	editRedo.setOnAction(e->handleEditRedo(e));
     	editCut.setOnAction(e->handleEditCut(e));
     	editCopy.setOnAction(e->handleEditCopy(e));
     	editPaste.setOnAction(e->handleEditPaste(e));    	
-    	editClear.setOnAction(e->handleEditClear(e));    	
+    	editClear.setOnAction(e->handleEditClear(e));
+    	editSelectAll.setOnAction(e->handleEditSelectAll(e));
+    	editSelectInvert.setOnAction(e->handleEditSelectInvert(e));
     	fileNewMaze.setOnAction(e->handleFileNewMaze(e));
         fileOpenMaze.setOnAction(e->handleFileOpenMaze(e));
     	fileSaveMaze.setOnAction(e->handleFileSaveMaze(e));
@@ -214,6 +222,8 @@ public class MineMazeApp extends Application{
         editCopy.setAccelerator(keyComboCopy);
         editPaste.setAccelerator(keyComboPaste);
         editClear.setAccelerator(keyComboClear);
+        editSelectAll.setAccelerator(keyComboSelectAll);
+        editSelectInvert.setAccelerator(keyComboSelectInvert);
         fileNewMaze.setAccelerator(keyComboNewMaze);
         fileOpenMaze.setAccelerator(keyComboOpenMaze);
         fileSaveMaze.setAccelerator(keyComboSaveMaze);
@@ -565,6 +575,7 @@ public class MineMazeApp extends Application{
     				workingDirectory = f.getParentFile();
     				undoState = null;
     				saveUndoState();
+    				primaryStage.setTitle(versionTitle +" - " + f.getName());
     			}catch(JsonSyntaxException je){
     				//Notify user of bad file.
     				Alert alert = new Alert(
@@ -601,8 +612,7 @@ public class MineMazeApp extends Application{
 				);
 				alert.setTitle("Error opening file");
 				alert.showAndWait();
-    		}
-    		
+    		}    		
     	}
     }//End of handleFileOpenMaze
     
@@ -826,6 +836,32 @@ public class MineMazeApp extends Application{
     	maze.repaint();
     }
     
+    private void handleEditSelectAll(ActionEvent e) {
+    	int rows = maze.getRows();
+    	int cols = maze.getCols();
+    	for(int row = 0;row<rows;row++) {
+    		for(int col=0;col<cols;col++) {
+    			maze.setSelection(row, col, true);
+    		}    		
+    	}
+    	redoSelection();
+    	saveUndoState();
+    	maze.repaint();
+    }
+
+    private void handleEditSelectInvert(ActionEvent e) {
+    	int rows = maze.getRows();
+    	int cols = maze.getCols();
+    	for(int row = 0;row<rows;row++) {
+    		for(int col=0;col<cols;col++) {
+    			maze.setSelection(row, col, !maze.getSelection(row,col));
+    		}    		
+    	}
+    	redoSelection();
+    	saveUndoState();
+    	maze.repaint();
+    }
+    
     private void saveUndoState() {
     	//If undo point saving is disabled 
     	//(for example during undo/redo) 
@@ -844,7 +880,6 @@ public class MineMazeApp extends Application{
     		undoState.next = x;
     		undoState = x;    		
     	}
-    	System.out.println("Undo Point Saved");
     }
 
     //Handler used to redirect undo/redo events from TextFields which would
@@ -874,8 +909,8 @@ public class MineMazeApp extends Application{
     void validateRange(TextField T, int min, int max, String def) {
     	try {
     		int x = Integer.parseInt(T.getText());
-    		if(x < 1)T.setText(Integer.toString(1));
-    		if(x > 128)T.setText(Integer.toString(128));
+    		if(x < min)T.setText(Integer.toString(min));
+    		if(x > max)T.setText(Integer.toString(max));
     	}catch(NumberFormatException e) {
     		T.setText(def);
     	}
@@ -952,7 +987,6 @@ public class MineMazeApp extends Application{
     		mazeSelectionDeltaCols = 0;
     		maze.clearSelection();
     		maze.repaint();
-    		System.out.println("mazeOnMouseDown -> maze.clearSelection()");
     	}
     }
 
@@ -1092,9 +1126,9 @@ public class MineMazeApp extends Application{
     void handleHelpAbout() {
     	Dialog<String> dialog = new Dialog<>();
     	Label label = new Label(
-			"Mine Maze V1.0.\n"+
+			versionTitle + "\n"+
 			"By:  Andrew McBain\n"+
-			"6-8-2025\n"
+			"6-23-2025\n"
 		);
     	dialog.getDialogPane().setContent(label);
     	dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
