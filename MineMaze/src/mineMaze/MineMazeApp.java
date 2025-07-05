@@ -12,7 +12,7 @@
  * You should have received a copy of the CC0 legalcode along with this work.
  * If not, see <https://creativecommons.org/publicdomain/zero/1.0/legalcode>.
  */
-package mineMaze;
+package minemaze;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -95,7 +95,7 @@ public class MineMazeApp extends Application{
     final int minRows = 1;
     final int maxCols = 128;
     final int minCols = 1;
-    final String versionTitle = "MineMaze V1.01";
+    final String versionTitle = "MineMaze V1.02";
     
 	
 	public static void main(String[] args) {
@@ -195,8 +195,7 @@ public class MineMazeApp extends Application{
     public void start(Stage primaryStage) {
     	this.primaryStage = primaryStage;
     	isUndoEnabled = false;//Disable undo saving while building UI.
-    	primaryStage.setTitle(versionTitle);
-    	
+    	    	
     	editUndo.setOnAction(e->handleEditUndo(e));
     	editRedo.setOnAction(e->handleEditRedo(e));
     	editCut.setOnAction(e->handleEditCut(e));
@@ -518,10 +517,20 @@ public class MineMazeApp extends Application{
         
 		//Update all UI elements with default values
 		setDefaults();
+		UpdateTitleBar();
 		undoState = null;
-		isUndoEnabled = true;//Now that the UI is built, enable undo saving.
+		isUndoEnabled = true;//Now that the UI is built, enable undo saving.		
 		saveUndoState();
     }
+    
+    //Updates the title bar to show the current program version and open file.
+    //This is centralized into one function to provide consistent behavior
+    //throughout the program.
+    public void UpdateTitleBar(){
+    	String fileName = saveMazeFile == null?"Untitled":saveMazeFile.getName();    	
+    	primaryStage.setTitle(versionTitle +" - " + fileName);
+    }
+    
     
     //
     //[
@@ -575,7 +584,7 @@ public class MineMazeApp extends Application{
     				workingDirectory = f.getParentFile();
     				undoState = null;
     				saveUndoState();
-    				primaryStage.setTitle(versionTitle +" - " + f.getName());
+    				UpdateTitleBar();
     			}catch(JsonSyntaxException je){
     				//Notify user of bad file.
     				Alert alert = new Alert(
@@ -651,6 +660,7 @@ public class MineMazeApp extends Application{
     	saveOutputFile = null;
     	outText.clear();
     	undoState = null;
+    	primaryStage.setTitle(versionTitle +" - Untitled");
     	saveUndoState();
     }    
     
@@ -669,7 +679,7 @@ public class MineMazeApp extends Application{
     	try {
     		f = new FileWriter(saveMazeFile, false);
     		f.write(s);
-    		f.close();
+    		f.close();    		
     	}catch(IOException ex) {
 			//Notify user of bad file.
 			Alert alert = new Alert(
@@ -705,6 +715,7 @@ public class MineMazeApp extends Application{
     	if(f != null) {
     		saveMazeFile = f;
     		workingDirectory = f.getParentFile();
+    		UpdateTitleBar();
     		handleFileSaveMaze(e);
     	}    	
     }//End of handleFileSaveMazeAs
@@ -994,6 +1005,7 @@ public class MineMazeApp extends Application{
     	//Store the position change on mouse up.
     	//If the user clicks again on the selection to drag it, we can use this
     	//delta to properly calculate the total delta.
+    	/*
     	int row = maze.getRowIndex(event.getY());
     	int col = maze.getColIndex(event.getX());
 		int dRow = row - mazeMouseDownRow;
@@ -1002,9 +1014,10 @@ public class MineMazeApp extends Application{
 			mazeSelectionDeltaRows = mazeSelectionDeltaRows + dRow;
 			mazeSelectionDeltaCols = mazeSelectionDeltaCols + dCol;
 		}else {
-			redoSelection();
+			redoSelection();			
 		}
 		saveUndoState();
+		*/
     }
     
     public void redoSelection() {
@@ -1026,6 +1039,7 @@ public class MineMazeApp extends Application{
 		mazeSelectionDeltaRows = 0;
 		mazeSelectionDeltaCols = 0;
 		mazeSelectionDragging = false;
+		System.out.println("Redo Selection");
     }
     
     void mazeOnMouseClicked(MouseEvent event) {
@@ -1054,6 +1068,19 @@ public class MineMazeApp extends Application{
 			}			
 		}
 		maze.repaint();
+
+    	//Store the position change.
+    	//If the user clicks again on the selection to drag it, we can use this
+    	//delta to properly calculate the total delta.
+		int dRow = row - mazeMouseDownRow;
+		int dCol = col - mazeMouseDownCol;
+		if(mazeSelectionDragging) {
+			mazeSelectionDeltaRows = mazeSelectionDeltaRows + dRow;
+			mazeSelectionDeltaCols = mazeSelectionDeltaCols + dCol;
+		}else {
+			redoSelection();			
+		}
+		saveUndoState();		
 	}   
 
     void mazeOnMouseDragged(MouseEvent event) {    	

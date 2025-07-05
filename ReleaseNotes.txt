@@ -6,3 +6,9 @@ When opening a file, the file name now appears in the title bar.
 Added Edit->Select All (CTRL-A)
 Added Edit->Select Invert (CTRL-I)
 Fixed bug in X,Y,Z text boxes where you couldn't enter numbers outside range 1~128.
+
+VERSION 1.02
+1)  Fixed title-bar logic so it always displays the correct open file name.
+2)  Moved MouseUp logic into MouseClicked routines.  Previously redoSelection() was being called in MouseUp (which happens before MouseClicked).  This resulted in the selection and block state being saved before the actions in MouseClicked were executed.  The result was that if the user did a click (that didn't involve dragging), the operation would get reverted if the next operation did involve dragging.
+
+

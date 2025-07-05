@@ -12,7 +12,7 @@
  * You should have received a copy of the CC0 legalcode along with this work.
  * If not, see <https://creativecommons.org/publicdomain/zero/1.0/legalcode>.
  */
-package mineMaze;
+package minemaze;
 
 //Class for handling cut/copy/paste to the clipboard.
 public class ClipboardData {

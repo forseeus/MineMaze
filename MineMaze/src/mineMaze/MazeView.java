@@ -12,7 +12,7 @@
  * You should have received a copy of the CC0 legalcode along with this work.
  * If not, see <https://creativecommons.org/publicdomain/zero/1.0/legalcode>.
  */
-package mineMaze;
+package minemaze;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;

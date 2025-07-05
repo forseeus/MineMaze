@@ -12,7 +12,7 @@
  * You should have received a copy of the CC0 legalcode along with this work.
  * If not, see <https://creativecommons.org/publicdomain/zero/1.0/legalcode>.
  */
-package mineMaze;
+package minemaze;
 
 //A class for storing a snapshot of the maze data
 //This is used both for undo/redo and for file-save/file-open of .maze files.

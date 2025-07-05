@@ -14,7 +14,7 @@
  */
 
 module mineMaze {
-	exports  mineMaze;
+	exports  minemaze;
 	requires transitive javafx.controls;
 	requires com.google.gson;
 }
